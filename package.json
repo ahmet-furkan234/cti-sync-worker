@@ -1,0 +1,34 @@
+{
+  "name": "cti-sync-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Background service that ingests NVD, CISA KEV and EPSS data into the CTI database",
+  "scripts": {
+    "dev": "tsx watch src/main/index.ts",
+    "build": "tsc --project tsconfig.json",
+    "start": "node dist/main/index.js",
+    "run:once": "tsx src/main/run-once.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "bullmq": "^6.3.10",
+    "dotenv": "^18.0.4",
+    "drizzle-orm": "^0.45.3",
+    "inversify": "^8.2.3",
+    "ioredis": "^6.0.0",
+    "pg": "^8.23.0",
+    "pino": "^10.3.1",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@types/pg": "^8.23.1",
+    "pino-pretty": "^13.1.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  }
+}
