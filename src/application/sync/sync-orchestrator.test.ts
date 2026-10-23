@@ -5,7 +5,7 @@ import { SyncOrchestrator } from './sync-orchestrator.js';
 
 const blank = (source: SyncSource): SyncState => ({
   source, status: 'idle', lastSuccessAt: null, lastStartedAt: null, lastFinishedAt: null,
-  lastError: null, recordsProcessed: 0, cursor: {}, runRequestedAt: null,
+  lastError: null, recordsProcessed: 0, cursor: {}, runRequestedAt: null, progress: null,
 });
 
 /** In-memory sync_state with the same locking semantics as the SQL implementation. */

@@ -143,7 +143,7 @@ export class NvdClient implements INvdClient {
 
     for (let attempt = 1; ; attempt++) {
       try {
-        const res = await fetch(url, { headers, signal: AbortSignal.timeout(90_000) });
+        const res = await fetch(url, { headers, signal: AbortSignal.timeout(180_000) });
         if (res.ok) {
           const body = (await res.json()) as {
             totalResults: number; startIndex: number; resultsPerPage: number;

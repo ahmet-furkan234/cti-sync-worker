@@ -14,7 +14,11 @@ export class SyncKevUseCase {
 
   async execute(): Promise<number> {
     const startedAt = new Date();
+    const phaseStart = startedAt.toISOString();
+    await this.state.update('kev', { progress: { phase: 'download', done: 0, total: null, baseDone: 0, startedAt: phaseStart, updatedAt: phaseStart } });
     const entries = await this.kev.fetchCatalog();
+    const now = new Date().toISOString();
+    await this.state.update('kev', { progress: { phase: 'apply', done: 0, total: entries.length, baseDone: 0, startedAt: now, updatedAt: now } });
     const updated = await this.cves.applyKev(entries);
     await this.state.update('kev', { lastSuccessAt: startedAt, recordsProcessed: entries.length });
     return updated;

@@ -3,6 +3,17 @@ export const SYNC_SOURCES: SyncSource[] = ['nvd', 'kev', 'epss'];
 
 export type SyncStatus = 'idle' | 'running' | 'error';
 
+/** Live progress of a running sync; `total` is null when it cannot be known (indeterminate). */
+export interface SyncProgress {
+  phase: 'full' | 'incremental' | 'download' | 'apply';
+  done: number;
+  total: number | null;
+  /** `done` at the start of this phase (a resumed full load starts above 0): the ETA rate is measured from it. */
+  baseDone: number;
+  startedAt: string;
+  updatedAt: string;
+}
+
 export interface SyncState {
   source: SyncSource;
   status: SyncStatus;
@@ -13,6 +24,7 @@ export interface SyncState {
   recordsProcessed: number;
   cursor: Record<string, unknown>;
   runRequestedAt: Date | null;
+  progress: SyncProgress | null;
 }
 
 export interface ISyncStateRepository {

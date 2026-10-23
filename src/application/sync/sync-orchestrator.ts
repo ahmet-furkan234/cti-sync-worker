@@ -39,11 +39,11 @@ export class SyncOrchestrator {
     try {
       const uc = source === 'nvd' ? this.nvd : source === 'kev' ? this.kev : this.epss;
       const count = await uc.execute();
-      await this.state.update(source, { status: 'idle', lastFinishedAt: new Date(), lastError: null });
+      await this.state.update(source, { status: 'idle', lastFinishedAt: new Date(), lastError: null, progress: null });
       this.logger.info({ source, count, ms: Date.now() - startedAt }, 'sync finished');
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      await this.state.update(source, { status: 'error', lastFinishedAt: new Date(), lastError: message });
+      await this.state.update(source, { status: 'error', lastFinishedAt: new Date(), lastError: message, progress: null });
       this.logger.error({ err, source }, 'sync failed');
     }
   }

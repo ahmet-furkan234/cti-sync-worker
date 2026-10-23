@@ -37,7 +37,7 @@ export class SyncStateRepository implements ISyncStateRepository {
     await this.ensure();
     const res = await this.db
       .update(syncState)
-      .set({ status: 'running', lastStartedAt: new Date(), lastError: null })
+      .set({ status: 'running', lastStartedAt: new Date(), lastError: null, progress: null })
       .where(sql`${syncState.source} = ${source} and ${syncState.status} <> 'running'`)
       .returning({ source: syncState.source });
     return res.length > 0;

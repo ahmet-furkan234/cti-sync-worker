@@ -1,3 +1,4 @@
+import type { SyncProgress } from '../../../domain/sync/sync-state.repository.interface.js';
 import { integer, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const syncState = pgTable('sync_state', {
@@ -10,4 +11,5 @@ export const syncState = pgTable('sync_state', {
   recordsProcessed: integer('records_processed').notNull().default(0),
   cursor: jsonb('cursor').$type<Record<string, unknown>>().notNull().default({}),
   runRequestedAt: timestamp('run_requested_at', { withTimezone: true }),
+  progress: jsonb('progress').$type<SyncProgress>(),
 });

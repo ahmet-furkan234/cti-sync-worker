@@ -1,11 +1,14 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../../shared/tokens.js';
 import type { ICveIngestRepository } from '../../../domain/cve/cve-ingest.repository.interface.js';
-import type { ISyncStateRepository } from '../../../domain/sync/sync-state.repository.interface.js';
+import type { ISyncStateRepository, SyncProgress } from '../../../domain/sync/sync-state.repository.interface.js';
 import type { ILogger, INvdClient } from '../../ports/ports.js';
 
 const MAX_WINDOW_MS = 119 * 86_400_000; // NVD allows at most 120 days per lastMod range
 const OVERLAP_MS = 5 * 60_000;
+const progress = (phase: SyncProgress['phase'], done: number, total: number, baseDone: number, startedAt: string): SyncProgress => ({
+  phase, done, total, baseDone, startedAt, updatedAt: new Date().toISOString(),
+});
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
@@ -35,17 +38,27 @@ export class SyncNvdUseCase {
       fullStart = new Date(String(state.cursor['fullStart'] ?? syncStart.toISOString()));
       const fs = fullStart.toISOString();
       this.logger.info({ startIndex }, 'nvd: full load');
-      startIndex = await this.pages({ startIndex }, async (next, count) => {
+      const baseDone = startIndex;
+      const phaseStart = new Date().toISOString();
+      startIndex = await this.pages({ startIndex }, async (next, count, total) => {
         processed += count;
-        await this.state.update('nvd', { cursor: { startIndex: next, processed, fullStart: fs }, recordsProcessed: processed });
+        await this.state.update('nvd', {
+          cursor: { startIndex: next, processed, fullStart: fs },
+          recordsProcessed: processed,
+          progress: progress('full', Math.min(next, total), total, baseDone, phaseStart),
+        });
       });
     } else {
       let from = new Date(state.lastSuccessAt.getTime() - OVERLAP_MS);
       while (from < syncStart) {
         const to = new Date(Math.min(from.getTime() + MAX_WINDOW_MS, syncStart.getTime()));
-        await this.pages({ startIndex: 0, lastModStart: from, lastModEnd: to }, async (_next, count) => {
+        const phaseStart = new Date().toISOString();
+        await this.pages({ startIndex: 0, lastModStart: from, lastModEnd: to }, async (next, count, total) => {
           processed += count;
-          await this.state.update('nvd', { recordsProcessed: processed });
+          await this.state.update('nvd', {
+            recordsProcessed: processed,
+            progress: progress('incremental', Math.min(next, total), total, 0, phaseStart),
+          });
         });
         from = to;
       }
@@ -58,14 +71,14 @@ export class SyncNvdUseCase {
 
   private async pages(
     base: { startIndex: number; lastModStart?: Date; lastModEnd?: Date },
-    onPage: (nextIndex: number, count: number) => Promise<void>,
+    onPage: (nextIndex: number, count: number, total: number) => Promise<void>,
   ): Promise<number> {
     let startIndex = base.startIndex;
     for (;;) {
       const page = await this.nvd.fetchPage({ ...base, startIndex });
       if (page.vulnerabilities.length > 0) await this.cves.upsertMany(page.vulnerabilities);
       startIndex += page.resultsPerPage || page.vulnerabilities.length;
-      await onPage(startIndex, page.vulnerabilities.length);
+      await onPage(startIndex, page.vulnerabilities.length, page.totalResults);
       this.logger.info({ startIndex, total: page.totalResults }, 'nvd: page stored');
       if (page.vulnerabilities.length === 0 || startIndex >= page.totalResults) return startIndex;
       await sleep(this.nvd.requestDelayMs);
