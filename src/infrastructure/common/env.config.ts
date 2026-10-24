@@ -11,6 +11,8 @@ const envSchema = z.object({
   NVD_API_KEY: z.string().optional().transform((v) => (v ? v : undefined)),
   /** false = no schedules and no bootstrap runs; the service still executes jobs the API enqueues. */
   SYNC_ENABLED: bool.default(true),
+  /** true = every start queues a run of all sources right away (not only of sources that never succeeded). */
+  SYNC_ON_START: bool.default(true),
   NVD_CRON: z.string().default('7 * * * *'),
   KEV_CRON: z.string().default('15 */6 * * *'),
   EPSS_CRON: z.string().default('30 3 * * *'),
@@ -27,6 +29,7 @@ export class EnvConfig {
   readonly LOG_LEVEL: string;
   readonly NVD_API_KEY: string | undefined;
   readonly SYNC_ENABLED: boolean;
+  readonly SYNC_ON_START: boolean;
   readonly NVD_CRON: string;
   readonly KEV_CRON: string;
   readonly EPSS_CRON: string;
@@ -45,6 +48,7 @@ export class EnvConfig {
     this.LOG_LEVEL = e.LOG_LEVEL;
     this.NVD_API_KEY = e.NVD_API_KEY;
     this.SYNC_ENABLED = e.SYNC_ENABLED;
+    this.SYNC_ON_START = e.SYNC_ON_START;
     this.NVD_CRON = e.NVD_CRON;
     this.KEV_CRON = e.KEV_CRON;
     this.EPSS_CRON = e.EPSS_CRON;

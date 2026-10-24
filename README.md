@@ -10,6 +10,8 @@ Standalone background service that keeps the CTI database fed. Separate process,
 | FIRST EPSS | daily exploitation-probability scores (streamed gzip CSV) | `EPSS_CRON` daily |
 
 After the *first* full NVD load, KEV and EPSS run automatically so the new rows get enriched.
+Every (re)start also queues a run of all three sources right away (`SYNC_ON_START`, default `true`), so a restarted service
+catches up without waiting for the next cron slot; set it to `false` to only bootstrap sources that never succeeded.
 
 ```bash
 npm install
